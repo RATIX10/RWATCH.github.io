@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <title>Videá a rebríček</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .video-list, .ranking {
+            margin-top: 20px;
+        }
+        .video-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .video-item video {
+            width: 100%;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Videá</h1>
+
+    <div class="video-list">
+        <div class="video-item">
+            <h2>Prvé video</h2>
+            <p>Skvelé video o prírode.</p>
+            <video controls>
+                <source src="videa/priroda.mp4" type="video/mp4">
+                Váš prehliadač nepodporuje HTML5 video.
+            </video>
+        </div>
+        <div class="video-item">
+            <h2>Druhé video</h2>
+            <p>Zábavné video o psoch.</p>
+            <video controls>
+                <source src="videa/pes.mp4" type="video/mp4">
+                Váš prehliadač nepodporuje HTML5 video.
+            </video>
+        </div>
+    </div>
+    
+    ---
+
+    <h2>Rebríček najlepších</h2>
+    <div class="ranking">
+        <ol>
+            <li>Prvé video (150 zhliadnutí)</li>
+            <li>Druhé video (120 zhliadnutí)</li>
+            <li>Tretie video (95 zhliadnutí)</li>
+        </ol>
+    </div>
+</div>
+
+</body>
+</html>
