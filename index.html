@@ -3,220 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RWATCH - Video Platform</title>
-    <style>
-        /* CSS ŠTÝLY */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f0f0f;
-            color: white;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        nav {
-            width: 100%;
-            height: 60px;
-            background: #1a1a1a;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            box-sizing: border-box;
-            border-bottom: 1px solid #333;
-        }
-
-        .logo { font-size: 24px; font-weight: bold; color: #ff0000; letter-spacing: 2px; }
-
-        .menu-icon {
-            font-size: 30px;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        /* Bočné menu */
-        .sidenav {
-            height: 100%;
-            width: 0;
-            position: fixed;
-            z-index: 10;
-            top: 0;
-            right: 0;
-            background-color: #111;
-            overflow-x: hidden;
-            transition: 0.5s;
-            padding-top: 60px;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.5);
-        }
-
-        .sidenav a, .sidenav p {
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 18px;
-            color: #ccc;
-            display: block;
-            transition: 0.3s;
-        }
-
-        .sidenav a:hover { color: #fff; background: #222; }
-
-        .sidenav .closebtn {
-            position: absolute;
-            top: 0;
-            left: 25px;
-            font-size: 36px;
-        }
-
-        /* Formuláre */
-        .container {
-            margin-top: 100px;
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            width: 320px;
-            text-align: center;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #333;
-            background: #000;
-            color: white;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #ff0000;
-            border: none;
-            color: white;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover { background: #cc0000; }
-
-        #upload-section { display: none; margin-top: 50px; }
-        .hidden { display: none !important; }
-    </style>
+    <title>Video Sharing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-900 text-white font-sans">
 
-    <nav>
-        <div class="logo">RWATCH</div>
-        <div class="menu-icon" onclick="openNav()">&#9776;</div>
+    <nav class="p-5 bg-gray-800 shadow-xl mb-10">
+        <h1 class="text-2xl font-bold text-center text-blue-500">Video Server</h1>
     </nav>
 
-    <div id="mySidenav" class="sidenav">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <p id="user-info" style="color: #555; font-size: 14px;"></p>
-        <hr style="border: 0.5px solid #222;">
-        <a href="#" onclick="showSection('home')">Domov</a>
-        <a href="#" id="upload-menu-btn" onclick="showSection('upload')">Upload Video</a>
-        <a href="#" onclick="logout()" style="color: #ff4444;">Odhlásiť sa</a>
-    </div>
+    <div class="max-w-5xl mx-auto px-4">
+        <div class="bg-blue-900/30 border border-blue-500 p-4 rounded mb-8 text-sm">
+            <strong>Tip:</strong> Ak chceš, aby videá videli všetci na GitHube, musíš ich nahrať do svojho repozitára a pridať ich do HTML kódu nižšie v sekcii "Zoznam videí".
+        </div>
 
-    <div id="auth-section" class="container">
-        <h2>Vstúpiť do RWATCH</h2>
-        <input type="email" id="login-email" placeholder="Emailová adresa">
-        <input type="password" id="login-pass" placeholder="Heslo">
-        <button onclick="handleLogin()">Prihlásiť sa</button>
-    </div>
-
-    <div id="home-section" class="hidden" style="text-align: center; margin-top: 50px;">
-        <h1>Vitajte na RWATCH</h1>
-        <p>Pre nahrávanie videa klikni na menu (tri čiarky) a zvoľ Upload.</p>
-    </div>
-
-    <div id="upload-section" class="container">
-        <h2>Nahrať nové video</h2>
-        <p style="font-size: 12px; color: #aaa;">Súbor bude odoslaný na kontrolu.</p>
-        <input type="file" id="video-file" accept="video/*">
-        <button onclick="simulateUpload()">Nahrať a odoslať kód</button>
-        <p id="upload-status" style="margin-top: 15px; color: #00ff00; font-size: 14px;"></p>
-    </div>
-
-    <script>
-        // JAVASCRIPT LOGIKA
-        const developerEmail = "ratix1626@gmail.com";
-
-        // Kontrola prihlásenia pri načítaní
-        window.onload = function() {
-            const savedUser = localStorage.getItem('rwatch_user');
-            if (savedUser) {
-                showApp(savedUser);
-            }
-        };
-
-        function openNav() { document.getElementById("mySidenav").style.width = "250px"; }
-        function closeNav() { document.getElementById("mySidenav").style.width = "0"; }
-
-        function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-
-            if (email.includes('@') && pass.length >= 4) {
-                localStorage.setItem('rwatch_user', email);
-                showApp(email);
-            } else {
-                alert("Zadaj platný email a heslo (min. 4 znaky).");
-            }
-        }
-
-        function showApp(email) {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('home-section').classList.remove('hidden');
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
-            let infoText = email;
-            if (email === developerEmail) {
-                infoText += " (Developer)";
-            }
-            document.getElementById('user-info').innerText = "Prihlásený ako: " + infoText;
-        }
+            <div class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                <video controls class="w-full">
+                    <source src="videa/video1.mp4" type="video/mp4">
+                    Váš prehliadač nepodporuje video.
+                </video>
+                <div class="p-4">
+                    <h3 class="font-bold">Prvé video</h3>
+                    <a href="videa/video1.mp4" download class="mt-3 block text-center bg-blue-600 hover:bg-blue-700 py-2 rounded text-sm transition">
+                        Stiahnuť video
+                    </a>
+                </div>
+            </div>
 
-        function showSection(section) {
-            closeNav();
-            document.getElementById('home-section').classList.add('hidden');
-            document.getElementById('upload-section').style.display = 'none';
+            </div>
+    </div>
 
-            if (section === 'home') {
-                document.getElementById('home-section').classList.remove('hidden');
-            } else if (section === 'upload') {
-                document.getElementById('upload-section').style.display = 'block';
-            }
-        }
-
-        function simulateUpload() {
-            const file = document.getElementById('video-file').files[0];
-            const status = document.getElementById('upload-status');
-
-            if (!file) {
-                alert("Vyber video súbor!");
-                return;
-            }
-
-            status.innerText = "Súbor sa spracováva...";
-            
-            setTimeout(() => {
-                status.style.color = "#ffcc00";
-                status.innerText = "One-Time Verification Code bol odoslaný na " + developerEmail + ". Čaká sa na schválenie vývojárom.";
-                console.log("DEBUG: Požiadavka na schválenie videa pre používateľa: " + localStorage.getItem('rwatch_user'));
-            }, 2000);
-        }
-
-        function logout() {
-            localStorage.removeItem('rwatch_user');
-            location.reload();
-        }
-    </script>
 </body>
 </html>
