@@ -34,6 +34,28 @@
 
             </div>
     </div>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
+    authDomain: "rwatch-d6976.firebaseapp.com",
+    projectId: "rwatch-d6976",
+    storageBucket: "rwatch-d6976.firebasestorage.app",
+    messagingSenderId: "1070516345809",
+    appId: "1:1070516345809:web:9de4a1f86d8c0ea98c9ef0",
+    measurementId: "G-7WBF55BQ19"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
