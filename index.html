@@ -3,37 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Cinematic Video Generator | RWATCH</title>
+    <title>RWATCH | AI Video Generator</title>
     <style>
         :root { --primary: #6366f1; --bg: #0b0f1a; --card: #161b2c; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .app-card { background: var(--card); padding: 30px; border-radius: 20px; width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #2d3748; text-align: center; }
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: white; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        .app-card { 
+            background: var(--card); 
+            padding: 40px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 500px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); 
+            border: 1px solid #2d3748; 
+            text-align: center;
+        }
+        h1 { font-size: 1.8rem; margin-bottom: 10px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 30px; }
         
-        h2 { margin-bottom: 20px; font-weight: 600; color: #fff; }
-        label { display: block; text-align: left; margin-bottom: 8px; font-size: 0.9rem; color: #94a3b8; }
+        label { display: block; text-align: left; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
         
         textarea, select { 
-            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; 
-            background: #1e293b; color: white; margin-bottom: 20px; box-sizing: border-box;
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #334155; 
+            background: #0f172a; color: white; margin-bottom: 20px; box-sizing: border-box;
+            font-size: 1rem; outline: none; transition: border 0.3s;
         }
+        textarea:focus { border-color: var(--primary); }
 
         .btn-generate { 
-            width: 100%; padding: 15px; border: none; border-radius: 10px; 
-            background: linear-gradient(90deg, #6366f1, #a855f7); color: white; 
-            font-weight: bold; cursor: pointer; transition: transform 0.2s;
+            width: 100%; padding: 16px; border: none; border-radius: 12px; 
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); 
+            color: white; font-size: 1rem; font-weight: bold; cursor: pointer; 
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s;
         }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 15px 20px -3px rgba(99, 102, 241, 0.5); }
         .btn-generate:active { transform: scale(0.98); }
 
-        .progress-container { display: none; margin-top: 25px; }
-        .bar-bg { width: 100%; background: #334155; height: 10px; border-radius: 5px; overflow: hidden; }
-        .bar-fill { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
-        .status-text { font-size: 0.8rem; margin-top: 8px; color: #94a3b8; }
+        /* Progress UI */
+        .progress-section { display: none; margin-top: 30px; }
+        .bar-container { width: 100%; background: #1e293b; height: 8px; border-radius: 10px; overflow: hidden; }
+        .bar-inner { width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: width 0.4s ease; }
+        .status-msg { font-size: 0.8rem; margin-top: 12px; color: #60a5fa; font-weight: 500; }
 
-        #video-player { display: none; margin-top: 25px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid var(--primary); }
+        #video-result { display: none; margin-top: 30px; border-radius: 16px; overflow: hidden; border: 2px solid #334155; width: 100%; }
     </style>
 </head>
 <body>
 
+<div class="app-card">
+    <h1>RWATCH AI Studio</h1>
+    <p class="subtitle">Generuj realistické videá pomocou neurónových sietí.</p>
+    
+    <label>Scenár videa</label>
+    <textarea id="video-prompt" placeholder="Napr. Detailný záber na oko robota, v ktorom sa odráža galaxia, 4k, macro..."></textarea>
+
+    <label>Dĺžka výstupu</label>
+    <select id="video-duration">
+        <option value="60">1 Minúta (Standard)</option>
+        <option value="300">5 Minút (Extended)</option>
+        <option value="3600">1 Hodina (Movie Mode)</option>
+    </select>
+
+    <button class="btn-generate" id="generate-btn">Spustiť generovanie</button>
+
+    <div class="progress-section" id="progress-area">
+        <div class="bar-container"><div class="bar-inner" id="progress-bar"></div></div>
+        <div class="status-msg" id="status-text">Inicializujem Firebase spojenie...</div>
+    </div>
+
+    <video id="video-result" controls>
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
+        authDomain: "rwatch-d6976.firebaseapp.com",
+        projectId: "rwatch-d6976",
+        storageBucket: "rwatch-d6976.firebasestorage.app",
+        messagingSenderId: "1070516345809",
+        appId: "1:1070516345809:web:9de4a1f86d8c0ea98c9ef0",
+        measurementId: "G-7WBF55BQ19"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+
+    // Hlavná logika tlačidla
+    document.getElementById('generate-btn').addEventListener('click', () => {
+        const promptValue = document.getElementById('video-prompt').value;
+        const duration = document.getElementById('video-duration').value;
+
+        if(!promptValue) {
+            alert("Prosím, zadaj popis videa.");
+            return;
+        }
+
+        // FIREBASE LOG: Zaznamenáme udalosť bez potreby prihlásenia
+        logEvent(analytics, 'video_generation_started', {
+            prompt: promptValue,
+            requested_duration: duration
+        });
+
+        startSimulation();
+    });
+
+    function startSimulation() {
+        const area = document.getElementById('progress-area');
+        const bar = document.getElementById('progress-bar');
+        const status = document.getElementById('status-text');
+        const video = document.getElementById('video-result');
+        const btn = document.getElementById('generate-btn');
+
+        btn.disabled = true;
+        btn.innerText = "Spracovávam...";
+        area.style.display = "block";
+        video.style.display = "none";
+        
+        let width = 0;
+        const interval = setInterval(() => {
+            width += Math.random() * 3;
+            if (width > 100) width = 100;
+            
+            bar.style.width = width + "%";
+
+            if(width < 20) status.innerText = "Pripravujem shadery a AI modely...";
+            else if(width < 50) status.innerText = "Renderujem snímky (Firebase Cloud Sync)...";
+            else if(width < 80) status.innerText = "Skladám audio stopu a efekty...";
+            else status.innerText = "Finalizujem MP4 súbor...";
+
+            if (width >= 100) {
+                clearInterval(interval);
+                status.innerText = "Hotovo! Video bolo vygenerované.";
+                video.style.display = "block";
+                btn.disabled = false;
+                btn.innerText = "Generovať znova";
+                video.play();
+            }
+        }, 150);
+    }
+</script>
+
+</body>
+</html>
 <div class="app-card">
     <h2>RWATCH AI Video</h2>
     
