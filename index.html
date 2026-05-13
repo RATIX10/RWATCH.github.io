@@ -3,198 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Video Generator | RWATCH</title>
+    <title>RWATCH | Netflix Style AI</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background-color: #1e293b;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-        }
-        textarea, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 1rem;
-            border-radius: 0.5rem;
-            border: none;
-            background-color: #334155;
-            color: white;
-            box-sizing: border-box;
-        }
-        button {
-            margin-top: 1rem;
-            padding: 0.8rem 2rem;
-            border: none;
-            border-radius: 0.5rem;
-            background-color: #3b82f6;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:hover { background-color: #2563eb; }
+        :root { --main-red: #e50914; --dark-bg: #141414; --card-bg: #1f1f1f; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; padding: 0; }
         
-        #progress-bar {
-            display: none;
-            margin-top: 1.5rem;
-            width: 100%;
-            background: #0f172a;
-            height: 10px;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        #fill { height: 100%; background: #3b82f6; width: 0%; transition: width 0.2s; }
+        /* Navbar */
+        nav { background: rgba(0,0,0,0.8); padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo { color: var(--main-red); font-size: 2rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Auth Section */
+        #auth-section { display: flex; justify-content: center; align-items: center; height: 80vh; }
+        .auth-card { background: rgba(0,0,0,0.75); padding: 60px; border-radius: 8px; width: 400px; text-align: left; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 4px; border: none; background: #333; color: white; box-sizing: border-box; }
+        .btn-red { width: 100%; padding: 15px; background: var(--main-red); border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 20px; }
+
+        /* Main Content (Skryté pred prihlásením) */
+        #main-content { display: none; padding: 50px; }
+        .hero { height: 60vh; background: linear-gradient(to top, var(--dark-bg), transparent), url('https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; display: flex; align-items: flex-end; padding-bottom: 50px; margin-bottom: 40px; }
         
-        #video-display { margin-top: 2rem; display: none; }
-        video { width: 100%; border-radius: 0.5rem; border: 2px solid #3b82f6; }
+        .upload-section { background: var(--card-bg); padding: 30px; border-radius: 10px; margin-bottom: 40px; border: 1px solid #333; }
+        
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .video-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; transition: transform 0.3s; cursor: pointer; }
+        .video-card:hover { transform: scale(1.05); }
+        .video-card video { width: 100%; aspect-ratio: 16/9; background: black; }
+        .video-info { padding: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>AI Video Generator</h2>
-    <p>Zadaj popis a vyber dĺžku videa:</p>
-    
-    <textarea id="prompt" placeholder="Napr. Realistický les v daždi..."></textarea>
-    
-    <select id="duration">
-        <option value="60">1 Minúta</option>
-        <option value="300">5 Minút</option>
-        <option value="1200">20 Minút</option>
-        <option value="3600">1 Hodina</option>
-    </select>
+<nav>
+    <div class="logo">RWATCH</div>
+    <div id="user-info"></div>
+</nav>
 
-    <button onclick="generateVideo()">Generovať video</button>
-
-    <div id="progress-bar"><div id="fill"></div></div>
-
-    <div id="video-display">
-        <h3>Tvoje AI video:</h3>
-        <video id="outputVideo" controls>
-            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-        </video>
+<div id="auth-section">
+    <div class="auth-card">
+        <h2>Registrácia</h2>
+        <input type="text" id="reg-name" placeholder="Meno">
+        <input type="email" id="reg-email" placeholder="E-mail">
+        <input type="password" id="reg-pass" placeholder="Heslo">
+        <button class="btn-red" onclick="handleSignUp()">Zaregistrovať sa a vstúpiť</button>
     </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
-    authDomain: "rwatch-d6976.firebaseapp.com",
-    projectId: "rwatch-d6976",
-    storageBucket: "rwatch-d6976.firebasestorage.app",
-    messagingSenderId: "1070516345809",
-    appId: "1:1070516345809:web:9de4a1f86d8c0ea98c9ef0",
-    measurementId: "G-7WBF55BQ19"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
-  // Funkcia na generovanie (volaná z tlačidla)
-  window.generateVideo = function() {
-    const prompt = document.getElementById('prompt').value;
-    const duration = document.getElementById('duration').value;
-
-    if (!prompt) {
-        alert("Zadaj prompt!");
-        return;
-    }
-
-    // Odoslanie info do Firebase Analytics
-    logEvent(analytics, 'video_requested', {
-        prompt_text: prompt,
-        duration_seconds: duration
-    });
-
-    // Simulácia priebehu
-    document.getElementById('progress-bar').style.display = "block";
-    let fill = document.getElementById('fill');
-    let width = 0;
-    
-    let interval = setInterval(() => {
-        width += 2;
-        fill.style.width = width + "%";
-        if(width >= 100) {
-            clearInterval(interval);
-            document.getElementById('video-display').style.display = "block";
-            document.getElementById('outputVideo').play();
-        }
-    }, 50);
-  };
-</script>
-
-</body>
-</html>
-font-size: 1rem; outline: none; transition: border 0.3s;
-        }
-        textarea:focus { border-color: var(--primary); }
-
-        .btn-generate { 
-            width: 100%; padding: 16px; border: none; border-radius: 12px; 
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); 
-            color: white; font-size: 1rem; font-weight: bold; cursor: pointer; 
-            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
-            transition: all 0.3s;
-        }
-        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 15px 20px -3px rgba(99, 102, 241, 0.5); }
-        .btn-generate:active { transform: scale(0.98); }
-
-        /* Progress UI */
-        .progress-section { display: none; margin-top: 30px; }
-        .bar-container { width: 100%; background: #1e293b; height: 8px; border-radius: 10px; overflow: hidden; }
-        .bar-inner { width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: width 0.4s ease; }
-        .status-msg { font-size: 0.8rem; margin-top: 12px; color: #60a5fa; font-weight: 500; }
-
-        #video-result { display: none; margin-top: 30px; border-radius: 16px; overflow: hidden; border: 2px solid #334155; width: 100%; }
-    </style>
-</head>
-<body>
-
-<div class="app-card">
-    <h1>RWATCH AI Studio</h1>
-    <p class="subtitle">Generuj realistické videá pomocou neurónových sietí.</p>
-    
-    <label>Scenár videa</label>
-    <textarea id="video-prompt" placeholder="Napr. Detailný záber na oko robota, v ktorom sa odráža galaxia, 4k, macro..."></textarea>
-
-    <label>Dĺžka výstupu</label>
-    <select id="video-duration">
-        <option value="60">1 Minúta (Standard)</option>
-        <option value="300">5 Minút (Extended)</option>
-        <option value="3600">1 Hodina (Movie Mode)</option>
-    </select>
-
-    <button class="btn-generate" id="generate-btn">Spustiť generovanie</button>
-
-    <div class="progress-section" id="progress-area">
-        <div class="bar-container"><div class="bar-inner" id="progress-bar"></div></div>
-        <div class="status-msg" id="status-text">Inicializujem Firebase spojenie...</div>
+<div id="main-content">
+    <div class="hero">
+        <div>
+            <h1>AI Cinematic World</h1>
+            <p>Nahrávaj a sleduj svoje AI výtvory bez limitov.</p>
+        </div>
     </div>
 
-    <video id="video-result" controls>
-        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-    </video>
+    <div class="upload-section">
+        <h3>Nahrať nové video</h3>
+        <input type="text" id="v-title" placeholder="Názov videa">
+        <input type="file" id="v-file" accept="video/*" style="background: none;">
+        <button class="btn-red" id="upload-btn" onclick="uploadVideo()">Nahrať na server</button>
+        <p id="up-status" style="font-size: 0.8rem; color: #aaa; margin-top: 10px;"></p>
+    </div>
+
+    <h3>Tvoja knižnica</h3>
+    <div class="video-grid" id="library">
+        </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-    import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
@@ -207,136 +85,75 @@ font-size: 1rem; outline: none; transition: border 0.3s;
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // Hlavná logika tlačidla
-    document.getElementById('generate-btn').addEventListener('click', () => {
-        const promptValue = document.getElementById('video-prompt').value;
-        const duration = document.getElementById('video-duration').value;
+    // 1. REGISTRÁCIA
+    window.handleSignUp = async () => {
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value;
+        const pass = document.getElementById('reg-pass').value;
 
-        if(!promptValue) {
-            alert("Prosím, zadaj popis videa.");
-            return;
-        }
+        if(!name || !email || !pass) { alert("Vyplň všetko!"); return; }
 
-        // FIREBASE LOG: Zaznamenáme udalosť bez potreby prihlásenia
-        logEvent(analytics, 'video_generation_started', {
-            prompt: promptValue,
-            requested_duration: duration
-        });
-
-        startSimulation();
-    });
-
-    function startSimulation() {
-        const area = document.getElementById('progress-area');
-        const bar = document.getElementById('progress-bar');
-        const status = document.getElementById('status-text');
-        const video = document.getElementById('video-result');
-        const btn = document.getElementById('generate-btn');
-
-        btn.disabled = true;
-        btn.innerText = "Spracovávam...";
-        area.style.display = "block";
-        video.style.display = "none";
-        
-        let width = 0;
-        const interval = setInterval(() => {
-            width += Math.random() * 3;
-            if (width > 100) width = 100;
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+            await updateProfile(userCredential.user, { displayName: name });
             
-            bar.style.width = width + "%";
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('user-info').innerText = "Ahoj, " + name;
+            loadVideos();
+        } catch (error) {
+            alert("Chyba: " + error.message);
+        }
+    };
 
-            if(width < 20) status.innerText = "Pripravujem shadery a AI modely...";
-            else if(width < 50) status.innerText = "Renderujem snímky (Firebase Cloud Sync)...";
-            else if(width < 80) status.innerText = "Skladám audio stopu a efekty...";
-            else status.innerText = "Finalizujem MP4 súbor...";
+    // 2. NAHRÁVANIE VIDEA (Simulované cez Firestore)
+    window.uploadVideo = async () => {
+        const title = document.getElementById('v-title').value;
+        const file = document.getElementById('v-file').files[0];
+        const status = document.getElementById('up-status');
 
-            if (width >= 100) {
-                clearInterval(interval);
-                status.innerText = "Hotovo! Video bolo vygenerované.";
-                video.style.display = "block";
-                btn.disabled = false;
-                btn.innerText = "Generovať znova";
-                video.play();
-            }
-        }, 150);
-    }
-</script>
+        if(!title || !file) { alert("Vyber video a zadaj názov!"); return; }
 
-</body>
-</html>
-<div class="app-card">
-    <h2>RWATCH AI Video</h2>
-    
-    <label>Popis scény (AI Prompt)</label>
-    <textarea id="prompt" placeholder="Napr. Realistický záber na nočný New York v roku 2077..."></textarea>
-
-    <label>Dĺžka videa</label>
-    <select id="duration">
-        <option value="60">1 Minúta</option>
-        <option value="300">5 Minút</option>
-        <option value="3600">1 Hodina</option>
-    </select>
-
-    <button class="btn-generate" onclick="startGeneration()">Spustiť AI renderovanie</button>
-
-    <div class="progress-container" id="progress-box">
-        <div class="bar-bg"><div class="bar-fill" id="bar"></div></div>
-        <div class="status-text" id="status">Pripravujem Firebase prostredie...</div>
-    </div>
-
-    <video id="video-player" controls>
-        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-    </video>
-</div>
-
-<script>
-    function startGeneration() {
-        const prompt = document.getElementById('prompt').value;
-        if(!prompt) { alert("Zadaj popis!"); return; }
-
-        document.getElementById('progress-box').style.display = "block";
-        document.getElementById('video-player').style.display = "none";
+        status.innerText = "Nahrávam dáta do RWATCH databázy...";
         
-        let progress = 0;
-        const bar = document.getElementById('bar');
-        const status = document.getElementById('status');
+        try {
+            // V reálnom svete by tu bol Firebase Storage, 
+            // nateraz simulujeme pridanie "záznamu" do knižnice
+            await addDoc(collection(db, "videos"), {
+                title: title,
+                user: auth.currentUser.displayName,
+                timestamp: new Date()
+            });
 
-        const interval = setInterval(() => {
-            progress += 2;
-            bar.style.width = progress + "%";
-            if(progress < 50) status.innerText = "Komunikujem s Firebase a AI serverom...";
-            else if(progress < 90) status.innerText = "Spracovávam video dáta...";
-            else if(progress >= 100) {
-                clearInterval(interval);
-                status.innerText = "Hotovo!";
-                document.getElementById('video-player').style.display = "block";
-            }
-        }, 100);
+            status.innerText = "Video úspešne pridané do tvojho Netflix listu!";
+            setTimeout(() => { location.reload(); }, 1500);
+        } catch (e) {
+            console.error("Error: ", e);
+        }
+    };
+
+    // 3. NAČÍTANIE KNIŽNICE
+    async function loadVideos() {
+        const querySnapshot = await getDocs(collection(db, "videos"));
+        const library = document.getElementById('library');
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const card = `
+                <div class="video-card">
+                    <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls></video>
+                    <div class="video-info">
+                        <strong>${data.title}</strong><br>
+                        <small>Pridal: ${data.user}</small>
+                    </div>
+                </div>
+            `;
+            library.innerHTML += card;
+        });
     }
 </script>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
-    authDomain: "rwatch-d6976.firebaseapp.com",
-    projectId: "rwatch-d6976",
-    storageBucket: "rwatch-d6976.firebasestorage.app",
-    messagingSenderId: "1070516345809",
-    appId: "1:1070516345809:web:9de4a1f86d8c0ea98c9ef0",
-    measurementId: "G-7WBF55BQ19"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  
-  console.log("Firebase úspešne prepojený s RWATCH projektom!");
-</script>
-
 </body>
 </html>
-
