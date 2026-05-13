@@ -3,38 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RWATCH | AI Video Generator</title>
+    <title>AI Video Generator | RWATCH</title>
     <style>
-        :root { --primary: #6366f1; --bg: #0b0f1a; --card: #161b2c; }
-        body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background: var(--bg); 
-            color: white; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
         }
-        .app-card { 
-            background: var(--card); 
-            padding: 40px; 
-            border-radius: 24px; 
-            width: 100%; 
-            max-width: 500px; 
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); 
-            border: 1px solid #2d3748; 
+        .container {
+            background-color: #1e293b;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
             text-align: center;
         }
-        h1 { font-size: 1.8rem; margin-bottom: 10px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 30px; }
+        textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            background-color: #334155;
+            color: white;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            background-color: #3b82f6;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover { background-color: #2563eb; }
         
-        label { display: block; text-align: left; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
+        #progress-bar {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background: #0f172a;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #fill { height: 100%; background: #3b82f6; width: 0%; transition: width 0.2s; }
         
-        textarea, select { 
-            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #334155; 
-            background: #0f172a; color: white; margin-bottom: 20px; box-sizing: border-box;
-            font-size: 1rem; outline: none; transition: border 0.3s;
+        #video-display { margin-top: 2rem; display: none; }
+        video { width: 100%; border-radius: 0.5rem; border: 2px solid #3b82f6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>AI Video Generator</h2>
+    <p>Zadaj popis a vyber dĺžku videa:</p>
+    
+    <textarea id="prompt" placeholder="Napr. Realistický les v daždi..."></textarea>
+    
+    <select id="duration">
+        <option value="60">1 Minúta</option>
+        <option value="300">5 Minút</option>
+        <option value="1200">20 Minút</option>
+        <option value="3600">1 Hodina</option>
+    </select>
+
+    <button onclick="generateVideo()">Generovať video</button>
+
+    <div id="progress-bar"><div id="fill"></div></div>
+
+    <div id="video-display">
+        <h3>Tvoje AI video:</h3>
+        <video id="outputVideo" controls>
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        </video>
+    </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
+    authDomain: "rwatch-d6976.firebaseapp.com",
+    projectId: "rwatch-d6976",
+    storageBucket: "rwatch-d6976.firebasestorage.app",
+    messagingSenderId: "1070516345809",
+    appId: "1:1070516345809:web:9de4a1f86d8c0ea98c9ef0",
+    measurementId: "G-7WBF55BQ19"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
+  // Funkcia na generovanie (volaná z tlačidla)
+  window.generateVideo = function() {
+    const prompt = document.getElementById('prompt').value;
+    const duration = document.getElementById('duration').value;
+
+    if (!prompt) {
+        alert("Zadaj prompt!");
+        return;
+    }
+
+    // Odoslanie info do Firebase Analytics
+    logEvent(analytics, 'video_requested', {
+        prompt_text: prompt,
+        duration_seconds: duration
+    });
+
+    // Simulácia priebehu
+    document.getElementById('progress-bar').style.display = "block";
+    let fill = document.getElementById('fill');
+    let width = 0;
+    
+    let interval = setInterval(() => {
+        width += 2;
+        fill.style.width = width + "%";
+        if(width >= 100) {
+            clearInterval(interval);
+            document.getElementById('video-display').style.display = "block";
+            document.getElementById('outputVideo').play();
+        }
+    }, 50);
+  };
+</script>
+
+</body>
+</html>
+font-size: 1rem; outline: none; transition: border 0.3s;
         }
         textarea:focus { border-color: var(--primary); }
 
