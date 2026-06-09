@@ -3,155 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RWATCH | Netflix Style AI</title>
+    <title>Stream platforma (Firebase + Cloudinary)</title>
     <style>
-        :root { --main-red: #e50914; --dark-bg: #141414; --card-bg: #1f1f1f; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; padding: 0; }
-        
-        /* Navbar */
-        nav { background: rgba(0,0,0,0.8); padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .logo { color: var(--main-red); font-size: 2rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
-
-        /* Auth Section */
-        #auth-section { display: flex; justify-content: center; align-items: center; height: 80vh; }
-        .auth-card { background: rgba(0,0,0,0.75); padding: 60px; border-radius: 8px; width: 400px; text-align: left; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 4px; border: none; background: #333; color: white; box-sizing: border-box; }
-        .btn-red { width: 100%; padding: 15px; background: var(--main-red); border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 20px; }
-
-        /* Main Content (Skryté pred prihlásením) */
-        #main-content { display: none; padding: 50px; }
-        .hero { height: 60vh; background: linear-gradient(to top, var(--dark-bg), transparent), url('https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; display: flex; align-items: flex-end; padding-bottom: 50px; margin-bottom: 40px; }
-        
-        .upload-section { background: var(--card-bg); padding: 30px; border-radius: 10px; margin-bottom: 40px; border: 1px solid #333; }
-        
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .video-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; transition: transform 0.3s; cursor: pointer; }
-        .video-card:hover { transform: scale(1.05); }
-        .video-card video { width: 100%; aspect-ratio: 16/9; background: black; }
-        .video-info { padding: 15px; }
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 25px; border-radius: 10px; box-shadow: 0px 0px 15px rgba(0,0,0,0.5); }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        input { background: #2a2a2a; color: #fff; }
+        button { background: #00b894; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:hover { background: #55efc4; }
+        video { width: 100%; border-radius: 6px; background: #000; margin-top: 10px; }
+        .hidden { display: none; }
+        .video-list { text-align: left; margin-top: 20px; padding: 15px; background: #2d3436; border-radius: 6px; max-height: 400px; overflow-y: auto; }
+        .video-item { background: #1e1e1e; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<nav>
-    <div class="logo">RWATCH</div>
-    <div id="user-info"></div>
-</nav>
-
-<div id="auth-section">
-    <div class="auth-card">
-        <h2>Registrácia</h2>
-        <input type="text" id="reg-name" placeholder="Meno">
-        <input type="email" id="reg-email" placeholder="E-mail">
-        <input type="password" id="reg-pass" placeholder="Heslo">
-        <button class="btn-red" onclick="handleSignUp()">Zaregistrovať sa a vstúpiť</button>
-    </div>
-</div>
-
-<div id="main-content">
-    <div class="hero">
-        <div>
-            <h1>AI Cinematic World</h1>
-            <p>Nahrávaj a sleduj svoje AI výtvory bez limitov.</p>
-        </div>
+<div class="container">
+    <div id="auth-section">
+        <h2>Vstup do Kanálu</h2>
+        <input type="text" id="channel-name" placeholder="Názov kanálu" required>
+        <input type="password" id="channel-password" placeholder="Heslo" required>
+        <button id="btn-login">Prihlásiť / Vytvoriť kanál</button>
     </div>
 
-    <div class="upload-section">
-        <h3>Nahrať nové video</h3>
-        <input type="text" id="v-title" placeholder="Názov videa">
-        <input type="file" id="v-file" accept="video/*" style="background: none;">
-        <button class="btn-red" id="upload-btn" onclick="uploadVideo()">Nahrať na server</button>
-        <p id="up-status" style="font-size: 0.8rem; color: #aaa; margin-top: 10px;"></p>
-    </div>
+    <div id="main-section" class="hidden">
+        <h2 id="welcome-msg">Kanál: </h2>
+        <button id="btn-logout" style="background: #d63031;">Odhlásiť sa</button>
+        
+        <hr style="border-color: #444;">
+        
+        <h3>Nahrávanie videa</h3>
+        <video id="preview" autoplay muted playsinline></video>
+        <button id="btn-start-record">🔴 Spustiť nahrávanie</button>
+        <button id="btn-stop-record" class="hidden" style="background: #0984e3;">⏹️ Zastaviť a odoslať</button>
 
-    <h3>Tvoja knižnica</h3>
-    <div class="video-grid" id="library">
-        </div>
+        <hr style="border-color: #444;">
+
+        <h3>Archív videí</h3>
+        <div id="video-container" class="video-list">Načítavam...</div>
+    </div>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // 1. SEM VLOŽ SVOJ FIREBASE KONFIGURAČNÝ KÓD
     const firebaseConfig = {
-        apiKey: "AIzaSyA8yGIMeU_rDhy8tX3BMCCyfHR_e_P2QRI",
-        authDomain: "rwatch-d6976.firebaseapp.com",
-        projectId: "rwatch-d6976",
-        storageBucket: "rwatch-d6976.firebasestorage.app",
-        messagingSenderId: "1070516345809",
-        appId: "1:1070516345809:web:9de4a1f86d8c0ea98c9ef0",
-        measurementId: "G-7WBF55BQ19"
+        apiKey: "TVOJA_API_KEY",
+        authDomain: "TVOJ_PROJECT_ID.firebaseapp.com",
+        projectId: "TVOJ_PROJECT_ID",
+        storageBucket: "TVOJ_PROJECT_ID.appspot.com",
+        messagingSenderId: "TVOJE_ID",
+        appId: "TVOJE_APP_ID"
     };
+
+    // 2. SEM VLOŽ SVOJE ÚDAJE Z CLOUDINARY
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/daw1tgk1j/video/upload";
+    const CLOUDINARY_PRESET = "RWATCH"; // Musí byť nastavený ako "Unsigned"
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // 1. REGISTRÁCIA
-    window.handleSignUp = async () => {
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
-        const pass = document.getElementById('reg-pass').value;
+    // Dom elementy
+    const authSection = document.getElementById('auth-section');
+    const mainSection = document.getElementById('main-section');
+    const channelNameInput = document.getElementById('channel-name');
+    const channelPasswordInput = document.getElementById('channel-password');
+    const btnLogin = document.getElementById('btn-login');
+    const btnLogout = document.getElementById('btn-logout');
+    const welcomeMsg = document.getElementById('welcome-msg');
+    const previewVideo = document.getElementById('preview');
+    const btnStartRecord = document.getElementById('btn-start-record');
+    const btnStopRecord = document.getElementById('btn-stop-record');
+    const videoContainer = document.getElementById('video-container');
 
-        if(!name || !email || !pass) { alert("Vyplň všetko!"); return; }
+    let currentChannel = null;
+    let mediaRecorder;
+    let recordedChunks = [];
+    let cameraStream;
 
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-            await updateProfile(userCredential.user, { displayName: name });
-            
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
-            document.getElementById('user-info').innerText = "Ahoj, " + name;
-            loadVideos();
-        } catch (error) {
-            alert("Chyba: " + error.message);
+    // LOGIN SYSTÉM (Cez Firebase Firestore)
+    btnLogin.addEventListener('click', async () => {
+        const channel = channelNameInput.value.trim().toLowerCase();
+        const password = channelPasswordInput.value.trim();
+
+        if(!channel || !password) return alert('Vyplň údaje!');
+
+        const docRef = doc(db, "channels", channel);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            if (docSnap.data().password === password) {
+                loginSuccess(channel, docSnap.data().videos || []);
+            } else {
+                alert('Nesprávne heslo!');
+            }
+        } else {
+            await setDoc(docRef, { password: password, videos: [] });
+            alert('Nový kanál vytvorený!');
+            loginSuccess(channel, []);
         }
-    };
+    });
 
-    // 2. NAHRÁVANIE VIDEA (Simulované cez Firestore)
-    window.uploadVideo = async () => {
-        const title = document.getElementById('v-title').value;
-        const file = document.getElementById('v-file').files[0];
-        const status = document.getElementById('up-status');
+    function loginSuccess(channel, videos) {
+        currentChannel = channel;
+        authSection.classList.add('hidden');
+        mainSection.classList.remove('hidden');
+        welcomeMsg.innerText = "Kanál: " + channel.toUpperCase();
+        loadVideos(videos);
+        initCamera();
+    }
 
-        if(!title || !file) { alert("Vyber video a zadaj názov!"); return; }
+    btnLogout.addEventListener('click', () => {
+        currentChannel = null;
+        if(cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+        authSection.classList.remove('hidden');
+        mainSection.classList.add('hidden');
+    });
 
-        status.innerText = "Nahrávam dáta do RWATCH databázy...";
-        
+    async function initCamera() {
         try {
-            // V reálnom svete by tu bol Firebase Storage, 
-            // nateraz simulujeme pridanie "záznamu" do knižnice
-            await addDoc(collection(db, "videos"), {
-                title: title,
-                user: auth.currentUser.displayName,
-                timestamp: new Date()
-            });
+            cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            previewVideo.srcObject = cameraStream;
+        } catch (e) { alert('Kamera nedostupná.'); }
+    }
 
-            status.innerText = "Video úspešne pridané do tvojho Netflix listu!";
-            setTimeout(() => { location.reload(); }, 1500);
-        } catch (e) {
-            console.error("Error: ", e);
-        }
-    };
-
-    // 3. NAČÍTANIE KNIŽNICE
-    async function loadVideos() {
-        const querySnapshot = await getDocs(collection(db, "videos"));
-        const library = document.getElementById('library');
+    // NAHRÁVANIE A ODOSIELANIE
+    btnStartRecord.addEventListener('click', () => {
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(cameraStream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
         
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const card = `
-                <div class="video-card">
-                    <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls></video>
-                    <div class="video-info">
-                        <strong>${data.title}</strong><br>
-                        <small>Pridal: ${data.user}</small>
-                    </div>
-                </div>
-            `;
-            library.innerHTML += card;
+        mediaRecorder.onstop = async () => {
+            videoContainer.innerHTML = "<i>Odosielam video do cloudu... Čakaj...</i>";
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+            // Príprava dát pre Cloudinary (odosiela sa ako formulár)
+            const formData = new FormData();
+            formData.append('file', blob);
+            formData.append('upload_preset', CLOUDINARY_PRESET);
+
+            try {
+                // 1. Nahranie videa na Cloudinary
+                const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if(data.secure_url) {
+                    // 2. Uloženie odkazu do Firebase Firestore
+                    const videoData = {
+                        timestamp: new Date().toLocaleString(),
+                        videoUrl: data.secure_url
+                    };
+                    const docRef = doc(db, "channels", currentChannel);
+                    await updateDoc(docRef, { videos: arrayUnion(videoData) });
+
+                    alert('Video úspešne uložené!');
+                    const updatedSnap = await getDoc(docRef);
+                    loadVideos(updatedSnap.data().videos);
+                } else {
+                    throw new Error('Chyba cloudu');
+                }
+            } catch (err) {
+                alert('Nahrávanie zlyhalo. Skontroluj nastavenia Cloudinary.');
+                console.error(err);
+            }
+        };
+
+        mediaRecorder.start();
+        btnStartRecord.classList.add('hidden');
+        btnStopRecord.classList.remove('hidden');
+    });
+
+    btnStopRecord.addEventListener('click', () => {
+        mediaRecorder.stop();
+        btnStartRecord.classList.remove('hidden');
+        btnStopRecord.classList.add('hidden');
+    });
+
+    function loadVideos(videos) {
+        videoContainer.innerHTML = videos.length === 0 ? 'Žiadne videá.' : '';
+        [...videos].reverse().forEach(vid => {
+            const div = document.createElement('div');
+            div.className = 'video-item';
+            div.innerHTML = `Subor z: ${vid.timestamp}<br><video src="${vid.videoUrl}" controls></video>`;
+            videoContainer.appendChild(div);
         });
     }
 </script>
